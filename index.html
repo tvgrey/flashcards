@@ -1,0 +1,228 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Language Flashcards</title>
+    <style>
+        body {
+            font-family: Arial, sans-serif;
+            max-width: 800px;
+            margin: 0 auto;
+            padding: 20px;
+            background-color: #f5f5f5;
+        }
+        
+        .card-container {
+            perspective: 1000px;
+            margin: 20px 0;
+        }
+        
+        .card {
+            width: 100%;
+            height: 200px;
+            position: relative;
+            transform-style: preserve-3d;
+            transition: transform 0.6s;
+            cursor: pointer;
+            border-radius: 10px;
+            box-shadow: 0 4px 8px rgba(0,0,0,0.1);
+        }
+        
+        .card.flipped {
+            transform: rotateY(180deg);
+        }
+        
+        .card-front, .card-back {
+            backface-visibility: hidden;
+            position: absolute;
+            width: 100%;
+            height: 100%;
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            justify-content: center;
+        }
+        
+        .card-front {
+            background: white;
+        }
+        
+        .card-back {
+            background: #d1e7dd;
+            transform: rotateY(180deg);
+        }
+        
+        button {
+            margin: 5px;
+            padding: 10px 20px;
+            border: none;
+            border-radius: 5px;
+            background: #0d6efd;
+            color: white;
+            transition: 0.3s;
+        }
+        
+        .progress {
+            margin: 20px 0;
+            padding: 10px;
+            background: white;
+            border-radius: 5px;
+            box-shadow: 0 2px 4px rgba(0,0,0,0.1);
+        }
+        
+        @media (max-width: 600px) {
+            .card {
+                height: 160px;
+            }
+        }
+    </style>
+</head>
+<body>
+    <h1>English-Russian Flashcards</h1>
+    
+    <div class="progress">
+        <button onclick="prevTopic()">← Предыдущая тема</button>
+        <span id="topic-name">Banking/Money</span>
+        <button onclick="nextTopic()">Следующая тема →</button>
+        <p>Правильных: <span id="correct-count">0</span> | Всего: <span id="total-count">0</span></p>
+    </div>
+    
+    <div id="card-container" class="card-container"></div>
+
+<script>
+const data = {
+    "Banking/Money": [
+        { word: "a cashpoint", options: ["терминал", "банкомат", "касса"], answer: "банкомат" },
+        { word: "a cheque (Br) / check (Am)", options: ["квитанция", "банк. чек", "счет"], answer: "банк. чек" },
+        { word: "a coin", options: ["монета", "банкнота", "счёт"], answer: "монета" },
+        { word: "a credit card; a debit card", options: ["кредитная карта", "платежная карта", "банковский чек"], answer: "кредитная карта" },
+        { word: "a note", options: ["бумага", "банкнота", "заметка"], answer: "банкнота" },
+        { word: "PIN", options: ["пароль", "код", "ПИН-код"], answer: "ПИН-код" },
+        { word: "a purse", options: ["бумажник", "женский кошелек", "кошелек"], answer: "женский кошелек" },
+        { word: "a wallet", options: ["сумка", "бумажник", "кошелек"], answer: "бумажник" },
+        { word: "to keep sth safe", options: ["хранить в безопасности", "спрятать", "сохранить"], answer: "хранить в безопасности" },
+        { word: "to stay safe", options: ["быть в безопасности", "остаться", "остаться целым"], answer: "быть в безопасности" },
+        { word: "to steal", options: ["украсть", "помочь", "покинуть"], answer: "украсть" },
+        { word: "to look after sb", options: ["присматривать", "забыть", "убрать"], answer: "присматривать" },
+        { word: "possessions", options: ["имущество", "деньги", "предметы"], answer: "имущество" },
+        { word: "common sense", options: ["здравый смысл", "обычный", "общий"], answer: "здравый смысл" },
+        { word: "a pickpocket", options: ["карманник", "вор", "грабитель"], answer: "карманник" },
+        { word: "a thief", options: ["вор", "полицейский", "мим"], answer: "вор" },
+        { word: "a pocket", options: ["карман", "кошелек", "рюкзак"], answer: "карман" },
+        { word: "to carry sth", options: ["носить", "переносить", "бросить"], answer: "носить" },
+        { word: "cash", options: ["деньги", "наличные", "счет"], answer: "наличные" },
+        { word: "to count money", options: ["считать деньги", "считать", "отсчитать"], answer: "считать деньги" },
+        { word: "to join (a club)", options: ["присоединиться", "отправиться", "покинуть"], answer: "присоединиться" },
+        { word: "to share (a flat)", options: ["делить квартиру", "покупать", "арендовать"], answer: "делить квартиру" }
+    ],
+    "Business Loans": [
+        { word: "to borrow", options: ["взять взаймы", "дать", "покинуть"], answer: "взять взаймы" },
+        { word: "to lend", options: ["дать взаймы", "брать", "забрать"], answer: "дать взаймы" },
+        { word: "to charge (for sth)", options: ["брать плату", "снимать", "отказывать"], answer: "брать плату" },
+        { word: "a loan", options: ["кредит", "заем", "счет"], answer: "кредит" },
+        { word: "loan application", options: ["заявка на кредит", "заявка", "счет"], answer: "заявка на кредит" },
+        { word: "low-interest loan", options: ["кредит с низкой ставкой", "высокий кредит", "бесплатный кредит"], answer: "кредит с низкой ставкой" },
+        { word: "to earn money", options: ["зарабатывать", "тратить", "сберегать"], answer: "зарабатывать" },
+        { word: "to pay back", options: ["выплачивать", "платить", "получать"], answer: "выплачивать" },
+        { word: "to provide sth for sth", options: ["предоставлять за что-то", "покупать", "арендовать"], answer: "предоставлять за что-то" },
+        { word: "a start-up", options: ["стартап", "компания", "филиал"], answer: "стартап" },
+        { word: "a bank account", options: ["банковский счет", "счет", "карта"], answer: "банковский счет" },
+        { word: "currency", options: ["валюта", "деньги", "счет"], answer: "валюта" },
+        { word: "a customer", options: ["клиент", "продавец", "менеджер"], answer: "клиент" },
+        { word: "to cost", options: ["стоить", "покупать", "продавать"], answer: "стоить" },
+        { word: "market research", options: ["исследование рынка", "анализ", "реклама"], answer: "исследование рынка" },
+        { word: "savings", options: ["накопления", "расходы", "инвестиции"], answer: "накопления" },
+        { word: "advice", options: ["совет", "реклама", "рекомендация"], answer: "совет" },
+        { word: "to advertise", options: ["рекламировать", "продавать", "снимать"], answer: "рекламировать" },
+        { word: "to specialise in", options: ["специализироваться", "обучаться", "работать"], answer: "специализироваться" }
+    ],
+    "Opinions": [
+        { word: "valuable", options: ["ценный", "дешевый", "новый"], answer: "ценный" },
+        { word: "charity", options: ["благотворительность", "благодарность", "благосостояние"], answer: "благотворительность" },
+        { word: "pocket money", options: ["карманные деньги", "денежный мешок", "кошелек"], answer: "карманные деньги" }
+    ],
+    "Study and Writing Skills": [
+        { word: "to pay bills", options: ["оплачивать счета", "считать деньги", "сберегать"], answer: "оплачивать счета" },
+        { word: "a branch", options: ["филиал", "ветвь", "отдел"], answer: "филиал" },
+        { word: "banking service", options: ["банковские услуги", "банковские счета", "банковские карты"], answer: "банковские услуги" },
+        { word: "to manage money", options: ["управлять деньгами", "тратить деньги", "сберегать"], answer: "управлять деньгами" }
+    ]
+};
+
+let currentTopicIndex = 0;
+let currentCardIndex = 0;
+let correctCount = 0;
+let total = 0;
+
+function showCard() {
+    const topics = Object.keys(data);
+    const topic = topics[currentTopicIndex];
+    const cards = data[topic];
+    
+    if (currentCardIndex >= cards.length) {
+        alert(`Тема ${topic} завершена! Правильных ответов: ${correctCount}/${total}`);
+        currentCardIndex = 0;
+        correctCount = 0;
+        total = 0;
+    }
+    
+    const card = cards[currentCardIndex];
+    const container = document.getElementById('card-container');
+    container.innerHTML = `
+        <div class="card" onclick="this.classList.toggle('flipped')">
+            <div class="card-front">
+                <h2>${card.word}</h2>
+                ${card.options.map(option => 
+                    `<button onclick="checkAnswer(event, '${card.answer}')">${option}</button>`
+                ).join('')}
+            </div>
+            <div class="card-back">
+                <h3>Правильный ответ:</h3>
+                <p>${card.answer}</p>
+            </div>
+        </div>
+    `;
+    
+    document.getElementById('topic-name').textContent = topic;
+    document.getElementById('correct-count').textContent = correctCount;
+    document.getElementById('total-count').textContent = total;
+}
+
+function checkAnswer(event, correctAnswer) {
+    const selected = event.target.textContent;
+    total++;
+    
+    if (selected === correctAnswer) {
+        correctCount++;
+        event.target.style.backgroundColor = '#198754';
+    } else {
+        event.target.style.backgroundColor = '#dc3545';
+    }
+    
+    setTimeout(() => {
+        currentCardIndex++;
+        showCard();
+    }, 1000);
+}
+
+function nextTopic() {
+    currentTopicIndex = (currentTopicIndex + 1) % Object.keys(data).length;
+    currentCardIndex = 0;
+    correctCount = 0;
+    total = 0;
+    showCard();
+}
+
+function prevTopic() {
+    currentTopicIndex = (currentTopicIndex - 1 + Object.keys(data).length) % Object.keys(data).length;
+    currentCardIndex = 0;
+    correctCount = 0;
+    total = 0;
+    showCard();
+}
+
+showCard();
+</script>
+</body>
+</html>
